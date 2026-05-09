@@ -19,18 +19,18 @@ const options: ISourceOptions = {
       },
     },
     color: {
-      value: ["#00d4ff", "#7c3aed", "#e8e8ed"],
+      value: ["#22c55e", "#eab308", "#f8fafc"],
     },
     links: {
       enable: true,
-      color: "#00d4ff",
+      color: "#22c55e",
       distance: 150,
-      opacity: 0.3,
+      opacity: 0.18,
       width: 1,
     },
     move: {
       enable: true,
-      speed: 0.45,
+      speed: 0.32,
       direction: "none",
       random: false,
       straight: false,
@@ -40,8 +40,8 @@ const options: ISourceOptions = {
     },
     opacity: {
       value: {
-        min: 0.14,
-        max: 0.34,
+        min: 0.10,
+        max: 0.24,
       },
     },
     shape: {

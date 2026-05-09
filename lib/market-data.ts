@@ -44,14 +44,14 @@ export const performance = [
 ];
 
 export const sectorColors: Record<string, string> = {
-  Technology: "#00d4ff",
-  Semiconductors: "#7c3aed",
-  Communication: "#ec4899",
-  "Consumer Discretionary": "#38bdf8",
-  Financials: "#a78bfa",
-  Healthcare: "#22d3ee",
-  Energy: "#8b5cf6",
-  "Consumer Staples": "#67e8f9"
+  Technology: "#22c55e",
+  Semiconductors: "#16a34a",
+  Communication: "#eab308",
+  "Consumer Discretionary": "#84cc16",
+  Financials: "#facc15",
+  Healthcare: "#bef264",
+  Energy: "#ef4444",
+  "Consumer Staples": "#65a30d"
 };
 
 export const signals = [

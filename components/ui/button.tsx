@@ -7,11 +7,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variants = {
-  default: "bg-[linear-gradient(135deg,#7c3aed,#00d4ff)] text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-400/40",
-  secondary: "border border-white/10 bg-white/[0.06] text-zinc-100 hover:bg-white/[0.1]",
-  outline: "border border-cyan-400/25 bg-transparent text-cyan-100 hover:border-cyan-300/60 hover:bg-cyan-400/10",
+  default: "bg-[linear-gradient(135deg,#15803d,#22c55e)] text-black shadow-lg shadow-green-500/15 hover:shadow-green-400/30",
+  secondary: "border border-green-500/20 bg-green-500/[0.06] text-zinc-100 hover:bg-green-500/[0.1]",
+  outline: "border border-green-500/30 bg-transparent text-green-200 hover:border-green-400/70 hover:bg-green-500/10",
   ghost: "text-zinc-200 hover:bg-white/10",
-  destructive: "bg-red-500 text-white hover:bg-red-400",
+  destructive: "bg-red-500 text-black hover:bg-red-400",
 };
 
 const sizes = {
@@ -24,7 +24,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", ...props }, ref) => (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-md font-mono font-semibold uppercase tracking-[0.08em] transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50",
         variants[variant],
         sizes[size],
         className,
