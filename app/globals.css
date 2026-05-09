@@ -3,28 +3,34 @@
 @theme inline {
   --font-sans: var(--font-inter);
   --font-heading: var(--font-geist-sans);
-  --color-background: #0a0a0a;
-  --color-foreground: #f8fafc;
-  --color-card: #101113;
-  --color-card-foreground: #f8fafc;
-  --color-popover: #101113;
-  --color-popover-foreground: #f8fafc;
-  --color-primary: #3b82f6;
-  --color-primary-foreground: #eff6ff;
-  --color-secondary: #18181b;
-  --color-secondary-foreground: #f4f4f5;
-  --color-muted: #18181b;
-  --color-muted-foreground: #a1a1aa;
-  --color-accent: #1d4ed8;
-  --color-accent-foreground: #dbeafe;
+  --color-background: #050510;
+  --color-foreground: #e8e8ed;
+  --color-card: #0f0f1a;
+  --color-card-foreground: #e8e8ed;
+  --color-popover: #0f0f1a;
+  --color-popover-foreground: #e8e8ed;
+  --color-primary: #00d4ff;
+  --color-primary-foreground: #050510;
+  --color-secondary: #181827;
+  --color-secondary-foreground: #e8e8ed;
+  --color-muted: #181827;
+  --color-muted-foreground: #8888a0;
+  --color-accent: #7c3aed;
+  --color-accent-foreground: #f4f0ff;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fef2f2;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-input: rgba(255, 255, 255, 0.12);
-  --color-ring: #3b82f6;
-  --radius-lg: 0.875rem;
-  --radius-md: 0.625rem;
-  --radius-sm: 0.375rem;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-input: rgba(255, 255, 255, 0.1);
+  --color-ring: #00d4ff;
+  --radius-lg: 1.25rem;
+  --radius-md: 0.875rem;
+  --radius-sm: 0.5rem;
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
 * {
@@ -33,31 +39,149 @@
 
 html {
   scroll-behavior: smooth;
+  background: #050510;
+  --mx: 50vw;
+  --my: 50vh;
 }
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 20% -10%, rgba(59, 130, 246, 0.18), transparent 32rem),
-    radial-gradient(circle at 85% 10%, rgba(34, 197, 94, 0.12), transparent 28rem),
-    #0a0a0a;
-  color: #f8fafc;
+  overflow-x: hidden;
+  background: #050510;
+  color: #e8e8ed;
   font-size: 16px;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  left: var(--mx);
+  top: var(--my);
+  z-index: 9999;
+  width: 600px;
+  height: 600px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.12), transparent 70%);
+  mix-blend-mode: screen;
+}
+
 ::selection {
-  background: rgba(59, 130, 246, 0.45);
+  background: rgba(0, 212, 255, 0.45);
+  color: #ffffff;
+}
+
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: #050510;
+}
+
+.aurora-bg::before,
+.aurora-bg::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, #7c3aed22 60deg, transparent 120deg, #00d4ff22 180deg, transparent 240deg, #7c3aed22 300deg, transparent 360deg);
+  animation: aurora-rotate 20s linear infinite;
+  filter: blur(80px);
+}
+
+.aurora-bg::after {
+  animation-duration: 15s;
+  animation-direction: reverse;
+}
+
+.noise::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .market-grid {
+  position: relative;
   background-image:
-    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 42px 42px;
+}
+
+.market-grid::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(124, 58, 237, 0.18), transparent 28rem),
+    radial-gradient(circle at 82% 4%, rgba(0, 212, 255, 0.14), transparent 30rem),
+    radial-gradient(circle at 52% 88%, rgba(236, 72, 153, 0.08), transparent 32rem);
 }
 
 .numeric {
   font-variant-numeric: tabular-nums;
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #7c3aed 0%, #00d4ff 25%, #7c3aed 50%, #ec4899 75%, #7c3aed 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+.glass-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease, background 240ms ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+  transform: translateY(-4px);
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 20px;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--angle), #7c3aed, #00d4ff, #ec4899, #7c3aed);
+  animation: rotate-border 4s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.gradient-border > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gradient-panel {
+  background:
+    linear-gradient(135deg, rgba(124, 58, 237, 0.16), rgba(0, 212, 255, 0.08)),
+    rgba(255, 255, 255, 0.04);
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -65,9 +189,38 @@ body {
   width: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 212, 255, 0.22);
   border-radius: 999px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
+}
+
+@keyframes aurora-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes rotate-border {
+  to {
+    --angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
 }

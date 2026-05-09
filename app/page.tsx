@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
 import {
   Activity,
   AlertTriangle,
@@ -20,8 +22,6 @@ import {
   Sparkles,
   WalletCards,
 } from "lucide-react";
-import { scaleSequential } from "d3-scale";
-import { interpolateRdYlGn } from "d3-scale-chromatic";
 import {
   Area,
   AreaChart,
@@ -59,8 +59,30 @@ import {
 } from "@/lib/market-data";
 import { cn, compactUsd, signed, usd } from "@/lib/utils";
 
-const chartText = "#a1a1aa";
-const grid = "rgba(255,255,255,0.08)";
+const chartText = "#a7b4c8";
+const grid = "rgba(0,212,255,0.08)";
+const chartCyan = "#00d4ff";
+const chartViolet = "#7c3aed";
+const chartPink = "#ec4899";
+
+const navItems = [
+  { label: "Dashboard", href: "#dashboard", active: true },
+  { label: "Research", href: "#research" },
+  { label: "Signals", href: "#signals" },
+  { label: "News", href: "#news-earnings" },
+  { label: "Risk", href: "#risk-trading" },
+];
+
+function heatColor(value: number) {
+  const opacity = Math.min(0.92, 0.18 + Math.abs(value) * 0.62);
+  return value >= 0 ? `rgba(0, 212, 255, ${opacity})` : `rgba(124, 58, 237, ${opacity})`;
+}
+
+const ParticleBackground = dynamic(
+  () => import("@/components/particle-background").then((mod) => mod.ParticleBackground),
+  { ssr: false },
+);
+
 
 type ResearchTicker = keyof typeof researchUniverse;
 
@@ -69,6 +91,25 @@ type Trade = {
   ticker: string;
   shares: number;
   orderType: "Market" | "Limit" | "Stop";
+};
+
+
+const fadeUp = {
+  initial: { opacity: 0, y: 40 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-80px" },
+  transition: { duration: 0.6 },
+};
+
+const staggerContainer = {
+  initial: {},
+  whileInView: { transition: { staggerChildren: 0.1 } },
+  viewport: { once: true, margin: "-80px" },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 28 },
+  whileInView: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 15 } },
 };
 
 const signalTone = {
@@ -118,15 +159,16 @@ function MetricCard({
   icon: typeof Activity;
 }) {
   const toneClass = {
-    blue: "text-blue-300 bg-blue-500/10 border-blue-500/20",
+    blue: "text-cyan-200 bg-cyan-400/10 border-cyan-400/20",
     green: "text-green-300 bg-green-500/10 border-green-500/20",
     red: "text-red-300 bg-red-500/10 border-red-500/20",
     yellow: "text-yellow-300 bg-yellow-500/10 border-yellow-500/20",
   }[tone];
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="flex items-start justify-between gap-4 p-5">
+    <motion.div variants={staggerItem}>
+      <Card className="overflow-hidden">
+        <CardContent className="flex items-start justify-between gap-4 p-5">
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">{title}</p>
           <p className="numeric mt-3 font-heading text-3xl font-semibold">{value}</p>
@@ -135,22 +177,23 @@ function MetricCard({
         <div className={cn("rounded-xl border p-3", toneClass)}>
           <Icon className="h-5 w-5" />
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
 function SectionHeader({ icon: Icon, eyebrow, title, description }: { icon: typeof Activity; eyebrow: string; title: string; description: string }) {
   return (
-    <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+    <motion.div {...fadeUp} className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
       <div>
-        <div className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.18em] text-blue-300">
+        <div className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.18em] text-cyan-300">
           <Icon className="h-4 w-4" /> {eyebrow}
         </div>
-        <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">{title}</h2>
+        <h2 className="font-heading text-3xl font-bold tracking-tight text-[#e8e8ed] md:text-4xl">{title}</h2>
       </div>
-      <p className="max-w-2xl text-sm leading-6 text-zinc-400">{description}</p>
-    </div>
+      <p className="max-w-2xl text-base leading-7 text-[#8888a0]">{description}</p>
+    </motion.div>
   );
 }
 
@@ -200,7 +243,6 @@ export default function Home() {
   const concentrationWarnings = allocation
     .filter((sector) => sector.value / totalValue > 0.18)
     .map((sector) => `${sector.sector} exposure at ${((sector.value / totalValue) * 100).toFixed(1)}%`);
-  const heatColor = scaleSequential(interpolateRdYlGn).domain([-1, 1]);
 
   function executeTrade() {
     const universePrice = researchUniverse[trade.ticker as ResearchTicker]?.price ?? watchlist.find((item) => item.ticker === trade.ticker)?.price ?? 100;
@@ -211,44 +253,75 @@ export default function Home() {
 
   return (
     <main className="market-grid min-h-screen">
-      <header className="border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-6 px-5 py-7 lg:flex-row lg:items-center lg:justify-between">
+      <nav className="fixed left-1/2 top-4 z-50 w-[calc(100%-2rem)] max-w-[1200px] -translate-x-1/2 rounded-full border border-white/[0.06] bg-white/[0.04] px-3 py-2 shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-3">
+          <a href="#" className="group flex items-center gap-2 rounded-full px-3 py-2 text-base font-semibold text-[#e8e8ed]">
+            <span className="h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_18px_rgba(0,212,255,0.8)]" />
+            Vaulted
+          </a>
+          <div className="hidden items-center gap-1 md:flex">
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "rounded-full border border-transparent px-4 py-2 text-base text-[#8888a0] transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-100 hover:shadow-[0_0_22px_rgba(0,212,255,0.18)]",
+                  item.active && "border-cyan-400/35 bg-cyan-400/10 text-cyan-100 shadow-[0_0_24px_rgba(0,212,255,0.22)]",
+                )}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+          <a href="#risk-trading" className="rounded-full bg-[linear-gradient(135deg,#7c3aed,#00d4ff)] px-4 py-2 text-base font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5 hover:shadow-cyan-400/40">Trade Desk</a>
+        </div>
+      </nav>
+
+      <header className="relative isolate overflow-hidden border-b border-white/10 bg-[#050510]/55 pt-20 backdrop-blur-xl">
+        <ParticleBackground />
+        <div className="absolute left-1/2 top-0 -z-10 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,212,255,0.22),transparent_65%)] blur-3xl" aria-hidden="true" />
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="mx-auto flex max-w-[1200px] flex-col gap-8 px-5 py-12 lg:flex-row lg:items-center lg:justify-between lg:py-16"
+        >
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-sm text-cyan-100">
               <Sparkles className="h-4 w-4" /> Vaulted Financial • Series B Fintech demo
             </div>
-            <h1 className="font-heading text-4xl font-semibold tracking-tight md:text-6xl">
-              Trading & Market <span className="text-blue-400">Intelligence</span>
+            <h1 className="font-heading text-5xl font-extrabold tracking-tight md:text-7xl">
+              Trading & Market <span className="shimmer-text">Intelligence</span>
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-zinc-400">
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-[#8888a0]">
               A Bloomberg-terminal-inspired research cockpit: portfolio performance, AI trading signals, earnings narratives, risk diagnostics, and paper execution in one responsive Next.js platform.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4 lg:w-[560px]">
+          <motion.div variants={staggerContainer} initial="initial" animate="whileInView" className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4 lg:w-[560px]">
             {["Live-style mock prices", "Drizzle-ready data layer", "Auth.js v5 scaffold", "Recharts analytics"].map((item) => (
-              <div key={item} className="rounded-xl border border-white/10 bg-zinc-950/70 p-3 text-zinc-300">
-                <div className="mb-2 h-1.5 w-12 rounded-full bg-blue-400" />
+              <motion.div key={item} variants={staggerItem} className="glass-card rounded-2xl p-3 text-zinc-300">
+                <div className="mb-2 h-1.5 w-12 rounded-full bg-[linear-gradient(90deg,#7c3aed,#00d4ff)] shadow-[0_0_20px_rgba(0,212,255,0.35)]" />
                 {item}
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </header>
 
-      <div className="mx-auto flex max-w-[1500px] flex-col gap-10 px-5 py-8">
-        <section id="dashboard">
+      <div className="mx-auto flex max-w-[1200px] flex-col gap-20 px-5 py-16 md:gap-[120px]">
+        <motion.section id="dashboard" {...fadeUp}>
           <SectionHeader
             icon={BriefcaseBusiness}
             eyebrow="Portfolio Dashboard"
             title="Institutional portfolio command center"
             description="Fifteen seeded holdings with realistic cost basis, live-style mark prices, allocation analytics, and benchmark-relative performance."
           />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard title="Portfolio Value" value={usd.format(totalValue)} detail={`${signed((totalPnl / totalCost) * 100, "%")} total return YTD`} tone="green" icon={CircleDollarSign} />
             <MetricCard title="Unrealized P&L" value={usd.format(totalPnl)} detail={`${usd.format(totalCost)} invested cost basis`} tone={totalPnl >= 0 ? "green" : "red"} icon={BadgeDollarSign} />
             <MetricCard title="Top Holding" value={topHolding.ticker} detail={`${usd.format(topHolding.value)} • ${((topHolding.value / totalValue) * 100).toFixed(1)}% weight`} tone="blue" icon={BarChart3} />
             <MetricCard title="Risk Alerts" value={String(concentrationWarnings.length)} detail="Concentration rules tripped above 18%" tone="yellow" icon={ShieldAlert} />
-          </div>
+          </motion.div>
 
           <div className="mt-4 grid gap-4 xl:grid-cols-[1.45fr_0.9fr]">
             <Card>
@@ -261,7 +334,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto scrollbar-thin">
-                  <table className="w-full min-w-[860px] border-separate border-spacing-0 text-sm">
+                  <table className="w-full min-w-[860px] border-separate border-spacing-0 text-base">
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-[0.16em] text-zinc-500">
                         <th className="border-b border-white/10 pb-3">Ticker</th>
@@ -275,8 +348,15 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody>
-                      {enrichedHoldings.map((holding) => (
-                        <tr key={holding.ticker} className="hover:bg-white/[0.03]">
+                      {enrichedHoldings.map((holding, index) => (
+                        <motion.tr
+                          key={holding.ticker}
+                          initial={{ opacity: 0, y: 18 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.45, delay: index * 0.035 }}
+                          className="transition-colors hover:bg-white/[0.03]"
+                        >
                           <td className="border-b border-white/5 py-3 font-semibold text-zinc-100">{holding.ticker}</td>
                           <td className="border-b border-white/5 py-3 text-zinc-300">{holding.company}</td>
                           <td className="border-b border-white/5 py-3 text-zinc-400">{holding.sector}</td>
@@ -285,7 +365,7 @@ export default function Home() {
                           <td className="numeric border-b border-white/5 py-3 text-right">{usd.format(holding.currentPrice)}</td>
                           <td className={cn("numeric border-b border-white/5 py-3 text-right font-medium", holding.pnl >= 0 ? "text-green-400" : "text-red-400")}>{usd.format(holding.pnl)}</td>
                           <td className={cn("numeric border-b border-white/5 py-3 text-right", holding.pctChange >= 0 ? "text-green-400" : "text-red-400")}>{signed(holding.pctChange * 100, "%")}</td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
@@ -338,20 +418,20 @@ export default function Home() {
                   <XAxis dataKey="month" stroke={chartText} />
                   <YAxis stroke={chartText} tickFormatter={(value) => compactUsd.format(Number(value))} />
                   <Tooltip formatter={formatCurrencyTooltip} contentStyle={{ background: "#09090b", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12 }} />
-                  <Line type="monotone" dataKey="portfolio" stroke="#22c55e" strokeWidth={3} dot={false} />
-                  <Line type="monotone" dataKey="sp500" stroke="#3b82f6" strokeWidth={2} dot={false} strokeDasharray="6 6" />
+                  <Line type="monotone" dataKey="portfolio" stroke={chartCyan} strokeWidth={3} dot={false} />
+                  <Line type="monotone" dataKey="sp500" stroke={chartViolet} strokeWidth={2} dot={false} strokeDasharray="6 6" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </section>
+        </motion.section>
 
-        <section id="research" className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
+        <motion.section id="research" {...fadeUp} className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
           <Card>
             <CardHeader>
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                 <div>
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.18em] text-blue-300"><Search className="h-4 w-4" /> Market Research</div>
+                  <div className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.18em] text-cyan-300"><Search className="h-4 w-4" /> Market Research</div>
                   <CardTitle>Search any ticker in the seeded research book</CardTitle>
                   <CardDescription>Fundamentals, technicals, chart context, and AI-generated investment summary.</CardDescription>
                 </div>
@@ -375,10 +455,10 @@ export default function Home() {
                       <XAxis dataKey="day" stroke={chartText} />
                       <YAxis stroke={chartText} domain={["dataMin - 8", "dataMax + 8"]} />
                       <Tooltip formatter={formatCurrencyTooltip} contentStyle={{ background: "#09090b", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12 }} />
-                      <Bar dataKey="rangeHigh" fill="rgba(59,130,246,0.16)" radius={[4, 4, 0, 0]} />
-                      <Area type="monotone" dataKey="close" fill="rgba(34,197,94,0.12)" stroke="#22c55e" strokeWidth={3} />
-                      <Line type="monotone" dataKey="ma50" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="ma200" stroke="#a855f7" strokeWidth={2} dot={false} />
+                      <Bar dataKey="rangeHigh" fill="rgba(124,58,237,0.16)" radius={[4, 4, 0, 0]} />
+                      <Area type="monotone" dataKey="close" fill="rgba(0,212,255,0.12)" stroke={chartCyan} strokeWidth={3} />
+                      <Line type="monotone" dataKey="ma50" stroke={chartViolet} strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="ma200" stroke={chartPink} strokeWidth={2} dot={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -407,7 +487,7 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm leading-6 text-blue-100">
+                  <p className="mt-5 rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-4 text-sm leading-6 text-cyan-100">
                     <BrainCircuit className="mr-2 inline h-4 w-4" /> {research.analysis}
                   </p>
                 </div>
@@ -436,15 +516,16 @@ export default function Home() {
               ))}
             </CardContent>
           </Card>
-        </section>
+        </motion.section>
 
-        <section id="signals">
+        <motion.section id="signals" {...fadeUp}>
           <SectionHeader icon={CandlestickChart} eyebrow="Trading Signals" title="Daily AI signal tape" description="Ten daily signals with direction, confidence, supporting indicators, and concise model reasoning." />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             {signals.map((signal) => {
               const Icon = signalTone[signal.direction].icon;
               return (
-                <Card key={signal.ticker} className={signalTone[signal.direction].className}>
+                <motion.div key={signal.ticker} variants={staggerItem}>
+                  <Card className={signalTone[signal.direction].className}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="font-heading text-2xl font-semibold">{signal.ticker}</div>
@@ -452,24 +533,25 @@ export default function Home() {
                     </div>
                     <div className="mt-4">
                       <div className="mb-1 flex items-center justify-between text-xs text-zinc-400"><span>Confidence</span><span>{signal.confidence}%</span></div>
-                      <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-current text-blue-400" style={{ width: `${signal.confidence}%` }} /></div>
+                      <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-[linear-gradient(90deg,#7c3aed,#00d4ff)] text-cyan-400" style={{ width: `${signal.confidence}%` }} /></div>
                     </div>
                     <p className="mt-4 text-sm leading-6 text-zinc-300">{signal.reasoning}</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {signal.indicators.map((indicator) => <Badge key={indicator} variant="outline" className="normal-case tracking-normal">{indicator}</Badge>)}
                     </div>
                   </CardContent>
-                </Card>
+                  </Card>
+                </motion.div>
               );
             })}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        <section id="news-earnings" className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <motion.section id="news-earnings" {...fadeUp} className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
           <Card>
             <CardHeader className="flex-row items-center justify-between gap-3">
               <div>
-                <CardTitle className="flex items-center gap-2"><Newspaper className="h-6 w-6 text-blue-300" /> News Feed</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Newspaper className="h-6 w-6 text-cyan-300" /> News Feed</CardTitle>
                 <CardDescription>50+ AI-scored financial news items with ticker tags, sentiment, source, and impact assessment.</CardDescription>
               </div>
               <Badge variant="blue">{news.length} items</Badge>
@@ -526,12 +608,12 @@ export default function Home() {
               </CardContent>
             </Card>
           </div>
-        </section>
+        </motion.section>
 
-        <section id="risk-trading" className="grid gap-4 xl:grid-cols-[1fr_0.82fr]">
+        <motion.section id="risk-trading" {...fadeUp} className="grid gap-4 xl:grid-cols-[1fr_0.82fr]">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Radar className="h-6 w-6 text-blue-300" /> Risk Monitor</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Radar className="h-6 w-6 text-cyan-300" /> Risk Monitor</CardTitle>
               <CardDescription>Concentration warnings, correlation heatmap, max drawdown profile, and sector exposure.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -550,7 +632,7 @@ export default function Home() {
                         <YAxis stroke={chartText} tickFormatter={(value) => `${value}%`} />
                         <Tooltip formatter={formatPercentTooltip} contentStyle={{ background: "#09090b", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12 }} />
                         <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" />
-                        <Area type="monotone" dataKey="drawdown" fill="rgba(239,68,68,0.22)" stroke="#ef4444" strokeWidth={2} />
+                        <Area type="monotone" dataKey="drawdown" fill="rgba(124,58,237,0.22)" stroke={chartViolet} strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -565,7 +647,7 @@ export default function Home() {
                       ...row.map((value, colIndex) => (
                         <div
                           key={`${rowIndex}-${colIndex}`}
-                          className="numeric flex aspect-square items-center justify-center rounded-md text-xs font-semibold text-black"
+                          className="numeric flex aspect-square items-center justify-center rounded-md text-xs font-semibold text-white shadow-inner shadow-black/20"
                           style={{ backgroundColor: heatColor(value) }}
                           title={`${correlationTickers[rowIndex]} / ${correlationTickers[colIndex]}: ${value}`}
                         >
@@ -594,7 +676,7 @@ export default function Home() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><WalletCards className="h-6 w-6 text-blue-300" /> Paper Trading</CardTitle>
+              <CardTitle className="flex items-center gap-2"><WalletCards className="h-6 w-6 text-cyan-300" /> Paper Trading</CardTitle>
               <CardDescription>Simple buy/sell workflow with virtual $500K starting balance and execution ledger.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -634,11 +716,11 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        </section>
+        </motion.section>
 
-        <footer className="rounded-xl border border-white/10 bg-black/40 p-5 text-center text-sm text-zinc-500">
+        <motion.footer {...fadeUp} className="glass-card rounded-[20px] border border-white/10 bg-black/40 p-5 text-center text-base text-[#8888a0]">
           Built for Vaulted Financial as an Ark portfolio showcase. Demo data is seeded and fictional for presentation only.
-        </footer>
+        </motion.footer>
       </div>
     </main>
   );
