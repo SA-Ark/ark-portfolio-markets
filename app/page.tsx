@@ -297,7 +297,7 @@ export default function Home() {
               A Bloomberg-terminal-inspired research cockpit: portfolio performance, AI trading signals, earnings narratives, risk diagnostics, and paper execution in one responsive Next.js platform.
             </p>
           </div>
-          <motion.div variants={staggerContainer} initial="initial" animate="whileInView" className="grid grid-cols-2 gap-2.5 text-sm md:grid-cols-4 lg:w-[560px]">
+          <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" viewport={{ once: true }} className="grid grid-cols-2 gap-2.5 text-sm md:grid-cols-4 lg:w-[560px]">
             {["Live-style mock prices", "Drizzle-ready data layer", "Auth.js v5 scaffold", "Recharts analytics"].map((item) => (
               <motion.div key={item} variants={staggerItem} className="glass-card rounded-xl p-2.5 text-zinc-300">
                 <div className="mb-2 h-1.5 w-12 rounded-md bg-[linear-gradient(90deg,#eab308,#22c55e)] shadow-[0_0_20px_rgba(34,197,94,0.35)]" />
